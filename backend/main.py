@@ -14,9 +14,9 @@ load_dotenv()
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 search_internet = SerperDevTool()
-file_read_tool = FileReadTool("ideas.md")
-file_read_tool2 = FileReadTool("market.md")
-file_read_tool3 = FileReadTool("company.md")
+file_read_tool = FileReadTool("/Users/sam22ridhi/Downloads/project 7/backend/ideas.md")
+file_read_tool2 = FileReadTool("/Users/sam22ridhi/Downloads/project 7/backend/market.md")
+file_read_tool3 = FileReadTool("/Users/sam22ridhi/Downloads/project 7/backend/company.md")
 scrape_tool = ScrapeWebsiteTool()
 llm = LLM(model="gemini/gemini-1.5-flash-latest")
 
@@ -39,7 +39,7 @@ class StartupIdea(BaseModel):
 def funding_agent(user_idea: str):
     fund_distribution_agent = Agent(
         role="Fund Distribution Specialist",
-        goal="Provide an optimal fund distribution strategy for the user's startup {user_idea}, considering market insights and current investor trends.",
+        goal=f"Provide an optimal fund distribution strategy for the user's startup {user_idea}, considering market insights and current investor trends.",
         backstory="""You are an expert in startup funding and financial planning. Your role is to allocate funds effectively 
                     across key business areas and provide insights into investors currently active in relevant sectors.""",
         allow_delegation=False,
@@ -247,6 +247,7 @@ def create_strategy_agent(user_idea: str):
         3. **Growth Strategy**
             - Market growth recommendations.
             - Digital marketing and customer acquisition strategies.
+        
 
         4. **Team Structure and Talent Acquisition**
             - Suggested team structure and key roles.
@@ -255,6 +256,7 @@ def create_strategy_agent(user_idea: str):
         5. **Fundraising Strategy**
             - Plan for securing funding and pitching investors.
             - Key metrics and milestones for investor discussions.
+        
 
         6. **Competitive Advantage**
             - Strategy for gaining a competitive edge.
@@ -264,9 +266,8 @@ def create_strategy_agent(user_idea: str):
             - Suggested KPIs for tracking performance.
             - Actionable targets for KPIs and how to use them.
 
-        8. **Financial Strategy**
-            - Financial forecast and revenue projections.
-            - Cost-saving and investment strategies.
+        8. **SWOT Analysis**
+            -strenghts and weaknesses
         """,
         tools=[file_read_tool],  # Assuming market.md is available after market analysis
         output_file="company.md",

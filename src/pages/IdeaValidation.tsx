@@ -9,38 +9,6 @@ interface Message {
   timestamp: Date;
 }
 
-interface StrategyCard {
-  title: string;
-  description: string;
-  goals: string[];
-  metrics: string[];
-}
-
-const strategyCards: StrategyCard[] = [
-  {
-    title: "AI-Powered Health Coaching Platform: Competitive Strategy",
-    description: "Explore competitive insights and strategic positioning for AI-powered health coaching platforms.",
-    goals: ["Positioning as the leader in hyper-personalized health coaching"],
-    metrics: [
-      "Key Competitors: 23andMe + Lark Health, Thrive AI Health",
-      "CAGR 20.1%",
-      "Market: $10B",
-      "USP: Hyper-Personalization"
-    ]
-  },
-  {
-    title: "Health & Wellness Product Strategy",
-    description: "Strategic insights into the market dynamics of health & wellness products leveraging AI for personalized coaching.",
-    goals: ["Target health-conscious adults, ages 25-55", "Focus on data privacy and personalization"],
-    metrics: [
-      "Target Audience: Health-conscious adults, 25-55",
-      "Strategic Focus: Personalization, Data Privacy",
-      "Potential Partnerships: Health Organizations"
-    ]
-  },
-  // Add more strategy cards here as needed
-];
-
 interface MarketCard {
   title: string;
   description: string;
@@ -67,17 +35,25 @@ const Assistant = () => {
     strategy: [
       {
         type: 'bot',
-        content: "🔧 Welcome to the Strategy Builder! Let's work together to create a strategic roadmap for your business. What goals are you looking to achieve?",
+        content: "📊 Welcome to Strategy Planner! Let's build a roadmap for your startup's success, covering product positioning, business models, and go-to-market strategies.",
         timestamp: new Date(),
       }
     ],
     funding: [
       {
         type: 'bot',
-        content: "💸 Welcome to the Funding Assistant! Ready to find the right investors and funding strategies for your startup?",
+        content: "💰 Welcome to Funding Guide! Need help with investment strategies, pitching to VCs, or exploring alternative funding sources? Let's get started!",
         timestamp: new Date(),
       }
     ],
+
+    pitch: [
+      {
+        type: 'bot',
+        content: "Let's generate a pitch deck for you startup idea!!",
+        timestamp: new Date(),
+      }
+    ]
   });
 
   const [input, setInput] = useState('');
@@ -85,30 +61,36 @@ const Assistant = () => {
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleStrategyCardClick = async (card: StrategyCard) => {
-    const prompt = `Analyze the strategy for ${card.title}: ${card.description}`;
-    setInput(prompt);
-    await handleSubmitHelper(prompt);
-  };
-
   const marketCards: MarketCard[] = [
     {
       title: "Personalized Health Coaching Market",
-      description: "AI-driven health coaching platforms focused on fitness and nutrition, personalized through genetic data and lifestyle tracking.",
-      metrics: ["CAGR 20.1%", "2025 Market: $10B", "Key Players: 23andMe + Lark Health, Thrive AI Health, Suggestic"]
+      description: "AI-driven health coaching platforms that use genetic data, lifestyle habits, and wearable integration for highly personalized fitness and nutrition plans.",
+      metrics: [
+        "CAGR 20.1%", 
+        "2025 Market: $10B", 
+        "Key Players: 23andMe + Lark Health, Thrive AI Health, Suggestic",
+        "Focus on specific niches (athletes, post-surgery recovery, genetic predispositions)",
+        "Integration with wearables for real-time adjustments"
+      ]
     },
     {
       title: "Genetic Data Integration in Wellness",
-      description: "AI platforms integrating advanced genomic analysis to predict diet and exercise responses.",
-      metrics: ["CAGR 15.8%", "2025 Market: $3.5B", "Key Players: DNAfit, Nutrigenomix, DNA Health"]
-    },
+      description: "AI platforms that integrate genetic analysis to predict diet and exercise responses, offering users tailored health recommendations.",
+      metrics: [
+        "CAGR 15.8%", 
+        "2025 Market: $3.5B", 
+        "Key Players: DNAfit, Nutrigenomix, DNA Health",
+        "Advanced genomic analysis to predict diet/exercise responses"
+      ]
+    }
   ];
 
   const tabs = [
     { id: 'ideation', label: 'Ideation Assistant', icon: Lightbulb },
     { id: 'market', label: 'Market Analysis', icon: BarChart },
     { id: 'strategy', label: 'Strategy Builder', icon: LayoutTemplate },
-    { id: 'funding', label: 'Funding Assistant', icon: HandCoins }
+    { id: 'funding', label: 'Funding Assistant', icon: HandCoins },
+    { id: 'pitch', label: 'Pitch Deck Generator', icon: LayoutTemplate}
   ];
 
   const scrollToBottom = () => {
@@ -135,14 +117,29 @@ const Assistant = () => {
     }
   }, [activeTab, tabMessages.ideation.length]);
 
+  // Update the response format to remove Markdown formatting
   const formatMarkdownResponse = (text: string) => {
     let formatted = text;
+  
+    // Remove markdown bold and italic markers
     formatted = formatted.replace(/\*\*([^\*]+)\*\*/g, '$1'); // Remove bold markers
     formatted = formatted.replace(/\*([^\*]+)\*/g, '$1'); // Remove italic markers
+  
+    // Remove markdown headers (e.g., ## Header)
     formatted = formatted.replace(/#{1,6}\s+([^\n]+)/g, '$1'); // Remove headers
-    formatted = formatted.replace(/^\s*[-*]\s+/gm, '• '); // Remove bullets
-    formatted = formatted.replace(/\n{2,}/g, '\n\n'); // Clean up newlines
+  
+    // Convert bullet points (like "*" or "-") into proper format (remove the bullets and just keep the text)
+    formatted = formatted.replace(/^\s*[-*]\s+/gm, '• ');
+  
+    // Replace multiple newlines with a single one
+    formatted = formatted.replace(/\n{2,}/g, '\n\n');
+  
     return formatted.trim();
+  };
+  const handleMarketCardClick = async (card: MarketCard) => {
+    const prompt = `Analyze the ${card.title} market: ${card.description}`;
+    setInput(prompt);
+    await handleSubmitHelper(prompt);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -166,7 +163,7 @@ const Assistant = () => {
 
     setInput('');
     setIsLoading(true);
-    setLoadingMessage(activeTab === 'ideation' ? 'Ideating...' : activeTab === 'market' ? 'Analyzing market...' : activeTab === 'strategy' ? 'Building strategy...' : 'Finding funding...');
+    setLoadingMessage(activeTab === 'ideation' ? 'Ideating...' : 'Analyzing market...');
 
     try {
       const endpoint =
@@ -176,8 +173,10 @@ const Assistant = () => {
           ? 'analyze-market'
           : activeTab === 'strategy'
           ? 'strategy'
-          : activeTab === 'find-funding';
-      const payload = { input: query };
+          : activeTab === 'funding'
+          ? 'fund-distribution'
+          : '';
+      const payload = { idea: query };
 
       const response = await axios.post(
         `http://localhost:8000/${endpoint}/`,
@@ -191,8 +190,10 @@ const Assistant = () => {
           : activeTab === 'market'
           ? response.data.market_result
           : activeTab === 'strategy'
-          ? response.data.strategy_result
-          : response.data.funding_result
+          ? response.data.strategy_result // assuming 'strategy_result' is the correct field
+          : activeTab === 'funding'
+          ? response.data.funding_result // assuming 'funding_result' is the correct field
+          : ''
       );
 
       const botMessage = {
@@ -205,7 +206,7 @@ const Assistant = () => {
         ...prev,
         [activeTab]: [...prev[activeTab], botMessage],
       }));
-      setLoadingMessage(null);
+      setLoadingMessage(null); // Reset loading message once done
     } catch (error) {
       console.error('Error:', error);
       const errorMessage = {
@@ -217,7 +218,7 @@ const Assistant = () => {
         ...prev,
         [activeTab]: [...prev[activeTab], errorMessage],
       }));
-      setLoadingMessage(null);
+      setLoadingMessage(null); // Reset loading message on error
     } finally {
       setIsLoading(false);
     }
@@ -284,19 +285,21 @@ const Assistant = () => {
                     )}
                   </div>
                 ))}
-                
+
                 {loadingMessage && (
                   <div className="flex justify-center text-purple-400">
                     <span>{loadingMessage}</span>
                   </div>
                 )}
-                {activeTab === 'market' && (
+
+                {activeTab === 'market' && tabMessages.market.length === 1 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     {marketCards.map((card, index) => (
                       <motion.div
                         key={index}
                         whileHover={{ scale: 1.02 }}
                         className="bg-[#1b1f3a] p-4 rounded-xl cursor-pointer border-2 border-transparent hover:border-purple-500"
+                        onClick={() => handleMarketCardClick(card)}
                       >
                         <h3 className="text-purple-400 text-lg font-semibold mb-2">
                           {card.title}
@@ -316,38 +319,6 @@ const Assistant = () => {
                     ))}
                   </div>
                 )}
-
-
-                {activeTab === 'strategy' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    {strategyCards.map((card, index) => (
-                      <motion.div
-                        key={index}
-                        whileHover={{ scale: 1.02 }}
-                        className="bg-[#1b1f3a] p-4 rounded-xl cursor-pointer border-2 border-transparent hover:border-purple-500"
-                        onClick={() => handleStrategyCardClick(card)}
-                      >
-                        <h3 className="text-purple-400 text-lg font-semibold mb-2">
-                          {card.title}
-                        </h3>
-                        <p className="text-sm opacity-90 mb-3">{card.description}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {card.metrics.map((metric, i) => (
-                            <span
-                              key={i}
-                              className="px-2 py-1 bg-purple-900/50 rounded-full text-xs"
-                            >
-                              {metric}
-                            </span>
-                          ))}
-                        </div>
-
-                        
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-
                 <div ref={messagesEndRef} />
               </div>
 
@@ -359,14 +330,16 @@ const Assistant = () => {
                   placeholder={
                     activeTab === 'ideation' ? 'Describe your startup idea...' :
                     activeTab === 'market' ? 'Describe your market analysis...' :
-                    activeTab === 'strategy' ? 'Share your strategic goals...' :
-                    'Describe your funding needs...'
+                    'Share your thoughts...'
                   }
-                  className="flex-1 p-4 rounded-full bg-[#2a2f55] text-lg focus:outline-none"
+                  className="flex-1 p-3 rounded-2xl bg-[#252b50] text-white"
                 />
                 <button
                   type="submit"
-                  className="p-4 bg-purple-600 rounded-full hover:bg-purple-700 transition-all"
+                  className={`px-4 py-2 rounded-2xl ${
+                    isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600'
+                  }`}
+                  disabled={isLoading}
                 >
                   <Send className="w-5 h-5" />
                 </button>
